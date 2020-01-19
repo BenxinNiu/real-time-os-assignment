@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/benxinniu/batcave/assignment/lab1/course.c
+course.h
+/Users/benxinniu/batcave/assignment/lab1/course.h
+stdlib.h
+-
+
+/Users/benxinniu/batcave/assignment/lab1/course.h
+stdint.h
+-
+
+/Users/benxinniu/batcave/assignment/lab1/main.c
+stdio.h
+-
+course.h
+/Users/benxinniu/batcave/assignment/lab1/course.h
+
+/Users/benxinniu/batcave/assignment/lab1/student.c
+

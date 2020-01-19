@@ -43,10 +43,10 @@ RM = /Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/benxinniu/batcave/assignment/lab1
+CMAKE_SOURCE_DIR = /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/benxinniu/batcave/assignment/lab1/cmake-build-debug
+CMAKE_BINARY_DIR = /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/cmake-build-debug
 
 # Include any dependencies generated for this target.
 include CMakeFiles/lab1.dir/depend.make
@@ -59,42 +59,42 @@ include CMakeFiles/lab1.dir/flags.make
 
 CMakeFiles/lab1.dir/main.c.o: CMakeFiles/lab1.dir/flags.make
 CMakeFiles/lab1.dir/main.c.o: ../main.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benxinniu/batcave/assignment/lab1/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/lab1.dir/main.c.o"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/lab1.dir/main.c.o   -c /Users/benxinniu/batcave/assignment/lab1/main.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/lab1.dir/main.c.o"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/lab1.dir/main.c.o   -c /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/main.c
 
 CMakeFiles/lab1.dir/main.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/lab1.dir/main.c.i"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/benxinniu/batcave/assignment/lab1/main.c > CMakeFiles/lab1.dir/main.c.i
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/main.c > CMakeFiles/lab1.dir/main.c.i
 
 CMakeFiles/lab1.dir/main.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/lab1.dir/main.c.s"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/benxinniu/batcave/assignment/lab1/main.c -o CMakeFiles/lab1.dir/main.c.s
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/main.c -o CMakeFiles/lab1.dir/main.c.s
 
 CMakeFiles/lab1.dir/student.c.o: CMakeFiles/lab1.dir/flags.make
 CMakeFiles/lab1.dir/student.c.o: ../student.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benxinniu/batcave/assignment/lab1/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/lab1.dir/student.c.o"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/lab1.dir/student.c.o   -c /Users/benxinniu/batcave/assignment/lab1/student.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/lab1.dir/student.c.o"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/lab1.dir/student.c.o   -c /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/student.c
 
 CMakeFiles/lab1.dir/student.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/lab1.dir/student.c.i"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/benxinniu/batcave/assignment/lab1/student.c > CMakeFiles/lab1.dir/student.c.i
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/student.c > CMakeFiles/lab1.dir/student.c.i
 
 CMakeFiles/lab1.dir/student.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/lab1.dir/student.c.s"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/benxinniu/batcave/assignment/lab1/student.c -o CMakeFiles/lab1.dir/student.c.s
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/student.c -o CMakeFiles/lab1.dir/student.c.s
 
 CMakeFiles/lab1.dir/course.c.o: CMakeFiles/lab1.dir/flags.make
 CMakeFiles/lab1.dir/course.c.o: ../course.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benxinniu/batcave/assignment/lab1/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/lab1.dir/course.c.o"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/lab1.dir/course.c.o   -c /Users/benxinniu/batcave/assignment/lab1/course.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/lab1.dir/course.c.o"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/lab1.dir/course.c.o   -c /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/course.c
 
 CMakeFiles/lab1.dir/course.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/lab1.dir/course.c.i"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/benxinniu/batcave/assignment/lab1/course.c > CMakeFiles/lab1.dir/course.c.i
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/course.c > CMakeFiles/lab1.dir/course.c.i
 
 CMakeFiles/lab1.dir/course.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/lab1.dir/course.c.s"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/benxinniu/batcave/assignment/lab1/course.c -o CMakeFiles/lab1.dir/course.c.s
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/course.c -o CMakeFiles/lab1.dir/course.c.s
 
 # Object files for target lab1
 lab1_OBJECTS = \
@@ -110,7 +110,7 @@ lab1: CMakeFiles/lab1.dir/student.c.o
 lab1: CMakeFiles/lab1.dir/course.c.o
 lab1: CMakeFiles/lab1.dir/build.make
 lab1: CMakeFiles/lab1.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/benxinniu/batcave/assignment/lab1/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking C executable lab1"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking C executable lab1"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/lab1.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -123,6 +123,6 @@ CMakeFiles/lab1.dir/clean:
 .PHONY : CMakeFiles/lab1.dir/clean
 
 CMakeFiles/lab1.dir/depend:
-	cd /Users/benxinniu/batcave/assignment/lab1/cmake-build-debug && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /Users/benxinniu/batcave/assignment/lab1 /Users/benxinniu/batcave/assignment/lab1 /Users/benxinniu/batcave/assignment/lab1/cmake-build-debug /Users/benxinniu/batcave/assignment/lab1/cmake-build-debug /Users/benxinniu/batcave/assignment/lab1/cmake-build-debug/CMakeFiles/lab1.dir/DependInfo.cmake --color=$(COLOR)
+	cd /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/cmake-build-debug && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1 /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1 /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/cmake-build-debug /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/cmake-build-debug /Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/cmake-build-debug/CMakeFiles/lab1.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/lab1.dir/depend
 

@@ -6,21 +6,41 @@
 
 #IncludeRegexTransform: 
 
-/Users/benxinniu/batcave/assignment/lab1/course.c
+/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/course.c
 course.h
-/Users/benxinniu/batcave/assignment/lab1/course.h
+/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/course.h
+stdio.h
+-
 stdlib.h
 -
 
-/Users/benxinniu/batcave/assignment/lab1/course.h
+/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/course.h
 stdint.h
 -
 
-/Users/benxinniu/batcave/assignment/lab1/main.c
+/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/main.c
 stdio.h
 -
 course.h
-/Users/benxinniu/batcave/assignment/lab1/course.h
+/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/course.h
+student.h
+/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/student.h
+assert.h
+-
 
-/Users/benxinniu/batcave/assignment/lab1/student.c
+/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/student.c
+stdio.h
+-
+stdlib.h
+-
+student.h
+/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/student.h
+course.h
+/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/course.h
+
+/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/student.h
+stdbool.h
+-
+stdint.h
+-
 

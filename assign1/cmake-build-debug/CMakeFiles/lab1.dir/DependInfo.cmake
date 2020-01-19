@@ -4,9 +4,9 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/Users/benxinniu/batcave/assignment/lab1/course.c" "/Users/benxinniu/batcave/assignment/lab1/cmake-build-debug/CMakeFiles/lab1.dir/course.c.o"
-  "/Users/benxinniu/batcave/assignment/lab1/main.c" "/Users/benxinniu/batcave/assignment/lab1/cmake-build-debug/CMakeFiles/lab1.dir/main.c.o"
-  "/Users/benxinniu/batcave/assignment/lab1/student.c" "/Users/benxinniu/batcave/assignment/lab1/cmake-build-debug/CMakeFiles/lab1.dir/student.c.o"
+  "/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/course.c" "/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/cmake-build-debug/CMakeFiles/lab1.dir/course.c.o"
+  "/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/main.c" "/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/cmake-build-debug/CMakeFiles/lab1.dir/main.c.o"
+  "/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/student.c" "/Users/benxinniu/batcave/assignment/real-time-os-assignment/assign1/cmake-build-debug/CMakeFiles/lab1.dir/student.c.o"
   )
 set(CMAKE_C_COMPILER_ID "AppleClang")
 

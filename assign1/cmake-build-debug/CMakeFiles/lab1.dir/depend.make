@@ -6,6 +6,9 @@ CMakeFiles/lab1.dir/course.c.o: ../course.h
 
 CMakeFiles/lab1.dir/main.c.o: ../course.h
 CMakeFiles/lab1.dir/main.c.o: ../main.c
+CMakeFiles/lab1.dir/main.c.o: ../student.h
 
+CMakeFiles/lab1.dir/student.c.o: ../course.h
 CMakeFiles/lab1.dir/student.c.o: ../student.c
+CMakeFiles/lab1.dir/student.c.o: ../student.h
 

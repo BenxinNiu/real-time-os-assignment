@@ -99,7 +99,7 @@ int main() {
     // Test performance
     int test_size = 22;
 
-    size_t s[22] = { 1, 2, 17, 42, 1049, 50, 1049, 20, 30, 7, 42, 50 ,10, 62, 19, 42, 2049, 50, 102400, 20, 122400, 132400};
+    size_t s[22] = { 1, 2, 7, 17, 42, 1049, 50, 1049, 20, 30, 42, 50 ,10, 62, 19, 42, 2049, 50, 102400, 20, 122400, 132400};
 
     long my_allocation_time[22];
     long malloc_allocation_time[22];
@@ -107,8 +107,11 @@ int main() {
     for (int i=0; i<test_size; i++){
         my_allocation_time[i] = get_time_for_allocation(s[i], false);
         malloc_allocation_time[i] = get_time_for_allocation(s[i], true);
+//        printf("%zu, %ld, %ld\n", s[i], my_allocation_time[i], malloc_allocation_time[i]);
+        printf("%ld,", s[i]);
 
-        printf("For size of %zu bytes allocation, my rtos_malloc spent: %ld vs malloc: %ld \n", s[i], my_allocation_time[i], malloc_allocation_time[i]);
+
+//        printf("For size of %zu bytes allocation, my rtos_malloc spent: %ld vs malloc: %ld \n", s[i], my_allocation_time[i], malloc_allocation_time[i]);
     }
 
     return 0;

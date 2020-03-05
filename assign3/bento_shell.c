@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <zconf.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <err.h>
 
@@ -36,16 +37,17 @@ void run_bento_shell(void) {
     } while (status);
 }
 
-void run_command(const char *path, char *const *parmList) {
+void run_command(const char *path, char **param_list) {
     pid_t child = fork();
     switch (child) {
         case -1:
             err(-1, "Error in fork()");
 
         case 0: {
-            execv(path, parmList);
+            try_redirect(param_list);
+            execv(path, param_list);
+            printf("debug: %s", param_list[1]);
             err(-1, "Failed to execute binary");
-            break;
         }
 
         default: {
@@ -55,14 +57,40 @@ void run_command(const char *path, char *const *parmList) {
             }
             if (WIFEXITED(status)) {
                 printf("exited with code: %d\n", WEXITSTATUS(status));
-            }
-            else if(WIFSIGNALED(status)) {
+            } else if (WIFSIGNALED(status)) {
                 printf("terminated by signal: %d\n", WTERMSIG(status));
-            }
-            else if(WIFSTOPPED(status)){
+            } else if (WIFSTOPPED(status)) {
                 printf("stopped by signal: %d\n", WSTOPSIG(status));
             }
             break;
+        }
+    }
+}
+
+void try_redirect(char **param_list) {
+    char *const std_out = ">";
+    char *const std_err = "2>";
+    int idx = 0;
+    int fd = 0;
+    char *param = param_list[idx];
+    while (param != NULL) {
+        if (strcmp(param, std_out) == 0) {
+            fd = 1;
+            break;
+        } else if (strcmp(param, std_err) == 0) {
+            fd = 2;
+            break;
+        }
+        param = param_list[++idx];
+    }
+    if (fd != 0) {
+        if (param_list[idx + 1] != NULL) {
+            int redirect = open(param_list[idx + 1], O_CREAT | O_RDWR, 0666);
+            close(fd); /* Close original stdout */
+            dup2(redirect, fd);
+            param_list[idx] = NULL;
+        } else {
+            printf("no output file specified, skipping redirect\n");
         }
     }
 }

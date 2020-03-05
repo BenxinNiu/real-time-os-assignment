@@ -13,12 +13,17 @@
 
 void run_bento_shell(void) {
     int status = 1;
+    int counter = 0;
+    char const *hisotry_cmd = "history";
+    char *history = "";
     do {
         printf("bento_shell >>");
         char *input = read_input(100);
         int const param_len = get_number_of_param(input);
         char *param_list[param_len];
-        if (param_len != 0) {
+        if (param_len > 0) {
+            counter++;
+            history = update_history(input, history);
             char *param = strtok(input, " ");
             int idx = 0;
             while (idx <= param_len) {
@@ -26,15 +31,34 @@ void run_bento_shell(void) {
                 idx++;
                 param = strtok(NULL, " ");
             }
-            char *command_location = get_command_location(param_list[0]);
-            if (command_location == NULL) {
-                printf("%s Command not found by bento shell...\n", input);
+            if (strcmp(param_list[0], hisotry_cmd) == 0) {
+                print_history(history);
             } else {
-                param_list[0] = command_location;
-                run_command(command_location, param_list);
+                char *command_location = get_command_location(param_list[0]);
+                if (command_location == NULL) {
+                    printf("%s Command not found by bento shell...\n", input);
+                } else {
+                    param_list[0] = command_location;
+                    run_command(command_location, param_list);
+                }
             }
         }
     } while (status);
+}
+
+char *update_history(char *const input, char *history) {
+    history = bento_concat_str(history, "\t");
+    return bento_concat_str(history, input);
+}
+
+void print_history(char *const history) {
+    char *history_cpy = malloc(strlen(history));
+    strcpy(history_cpy, history);
+    char *cmd = strtok(history_cpy, "\t");
+    while (cmd != NULL) {
+        printf("%s\n", cmd);
+        cmd = strtok(NULL, "\t");
+    }
 }
 
 void run_command(const char *path, char **param_list) {
@@ -155,7 +179,7 @@ bool file_exist(char *filename) {
     return (stat(filename, &buffer) == 0);
 }
 
-char *bento_concat_str(char *str1, char *str2) {
+char *bento_concat_str(char *const str1, char *const str2) {
     char *dest = (char *) malloc(1 + strlen(str1) + strlen(str2));
     strcpy(dest, str1);
     strcat(dest, str2);

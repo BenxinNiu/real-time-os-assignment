@@ -25,15 +25,46 @@ void run_bento_shell(void) {
                 idx++;
                 param = strtok(NULL, " ");
             }
-            char *command = get_command_location(param_list[0]);
-            if (command == NULL) {
+            char *command_location = get_command_location(param_list[0]);
+            if (command_location == NULL) {
                 printf("%s Command not found by bento shell...\n", input);
             } else {
-                param_list[0] = command;
-                run_command(command, param_list);
+                param_list[0] = command_location;
+                run_command(command_location, param_list);
             }
         }
     } while (status);
+}
+
+void run_command(const char *path, char *const *parmList) {
+    pid_t child = fork();
+    switch (child) {
+        case -1:
+            err(-1, "Error in fork()");
+
+        case 0: {
+            execv(path, parmList);
+            err(-1, "Failed to execute binary");
+            break;
+        }
+
+        default: {
+            int status;
+            if (waitpid(child, &status, 0) == -1) {
+                err(-1, "Failed to waitpid()");
+            }
+            if (WIFEXITED(status)) {
+                printf("exited with code: %d\n", WEXITSTATUS(status));
+            }
+            else if(WIFSIGNALED(status)) {
+                printf("terminated by signal: %d\n", WTERMSIG(status));
+            }
+            else if(WIFSTOPPED(status)){
+                printf("stopped by signal: %d\n", WSTOPSIG(status));
+            }
+            break;
+        }
+    }
 }
 
 int get_number_of_param(char *input) {
@@ -47,35 +78,6 @@ int get_number_of_param(char *input) {
     }
     free(input_cpy);
     return num;
-}
-
-void run_command(const char *path, char *const *parmList) {
-    pid_t child = fork();
-//    printf("The child PID is %d\n", child);
-    switch (child) {
-        case -1:
-            err(-1, "Error in fork()");
-
-        case 0: {
-//            printf("PID 0: I must be the child!\n");
-            execv(path, parmList);
-            err(-1, "Failed to execute binary");
-            break;
-        }
-
-        default: {
-//            printf("PID %d: I must be the parent!\n", child);
-
-            int status;
-            if (waitpid(child, &status, 0) == -1) {
-                err(-1, "Failed to waitpid()");
-            }
-            if (WIFEXITED(status)) {
-//                printf("child exited with code: %d\n", WEXITSTATUS(status));
-            }
-            break;
-        }
-    }
 }
 
 char *read_input(int max_input_len) {

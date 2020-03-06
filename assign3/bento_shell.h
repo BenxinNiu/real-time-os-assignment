@@ -28,3 +28,5 @@ void try_redirect(char **param_list);
 char *update_history(char *const input, char *history);
 
 void print_history(char *const history);
+
+void update_param_list(char *input, char **param_list, int param_len);

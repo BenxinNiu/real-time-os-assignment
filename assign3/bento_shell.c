@@ -13,7 +13,6 @@
 
 void run_bento_shell(void) {
     int status = 1;
-    int counter = 0;
     char const *hisotry_cmd = "history";
     char *history = "";
     do {
@@ -22,15 +21,9 @@ void run_bento_shell(void) {
         int const param_len = get_number_of_param(input);
         char *param_list[param_len];
         if (param_len > 0) {
-            counter++;
             history = update_history(input, history);
-            char *param = strtok(input, " ");
-            int idx = 0;
-            while (idx <= param_len) {
-                param_list[idx] = param;
-                idx++;
-                param = strtok(NULL, " ");
-            }
+            update_param_list(input, param_list, param_len);
+
             if (strcmp(param_list[0], hisotry_cmd) == 0) {
                 print_history(history);
             } else {
@@ -44,21 +37,6 @@ void run_bento_shell(void) {
             }
         }
     } while (status);
-}
-
-char *update_history(char *const input, char *history) {
-    history = bento_concat_str(history, "\t");
-    return bento_concat_str(history, input);
-}
-
-void print_history(char *const history) {
-    char *history_cpy = malloc(strlen(history));
-    strcpy(history_cpy, history);
-    char *cmd = strtok(history_cpy, "\t");
-    while (cmd != NULL) {
-        printf("%s\n", cmd);
-        cmd = strtok(NULL, "\t");
-    }
 }
 
 void run_command(const char *path, char **param_list) {
@@ -88,6 +66,31 @@ void run_command(const char *path, char **param_list) {
             }
             break;
         }
+    }
+}
+
+void update_param_list(char *input, char **param_list, int param_len) {
+    char *param = strtok(input, " ");
+    int idx = 0;
+    while (idx <= param_len) {
+        param_list[idx] = param;
+        idx++;
+        param = strtok(NULL, " ");
+    }
+}
+
+char *update_history(char *const input, char *history) {
+    history = bento_concat_str(history, "\t");
+    return bento_concat_str(history, input);
+}
+
+void print_history(char *const history) {
+    char *history_cpy = malloc(strlen(history));
+    strcpy(history_cpy, history);
+    char *cmd = strtok(history_cpy, "\t");
+    while (cmd != NULL) {
+        printf("%s\n", cmd);
+        cmd = strtok(NULL, "\t");
     }
 }
 

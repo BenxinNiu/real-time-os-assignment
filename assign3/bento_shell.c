@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <err.h>
+#include <signal.h>
 
 void run_bento_shell(void) {
     int status = 1;
@@ -53,6 +54,7 @@ void run_command(const char *path, char **param_list) {
         }
 
         default: {
+            signal(SIGINT, signal_handler);
             int status;
             if (waitpid(child, &status, 0) == -1) {
                 err(-1, "Failed to waitpid()");
@@ -187,4 +189,7 @@ char *bento_concat_str(char *const str1, char *const str2) {
     strcpy(dest, str1);
     strcat(dest, str2);
     return dest;
+}
+
+void signal_handler(int tmp){
 }

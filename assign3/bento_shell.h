@@ -3,6 +3,8 @@
 //
 
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifndef ASSIGN3_BENTO_SHELL_H
 #define ASSIGN3_BENTO_SHELL_H
@@ -30,3 +32,5 @@ char *update_history(char *const input, char *history);
 void print_history(char *const history);
 
 void update_param_list(char *input, char **param_list, int param_len);
+
+void signal_handler(int tmp);

@@ -20,31 +20,60 @@
 
 #include "assign4.h"
 
+
 // Some hard-coded inode numbers:
 #define    ROOT_DIR    1
 #define    ASSIGN_DIR    2
 #define    USERNAME_FILE    3
-#define    FILE_COUNT    3
+#define    FEATURE_FILE    4
+#define    FILE_COUNT    4
+struct stat *file_stats;
+
+static const char UsernameContent[] = "bn2645_practicing_social_distancing\n";
+
+static const char FeatureImplContent[] = "- directory listing\n";
 
 static void
 assign4_init(void *userdata, struct fuse_conn_info *conn) {
     struct backing_file *backing = userdata;
     fprintf(stderr, "%s '%s'\n", __func__, backing->bf_path);
-
+    printf("\n\nhihihihihihihihi benxin\n\n");
     /*
      * This function should do some setup (e.g., open the backing file or
      * mmap(2) some memory) and prepare any metadata that you need.
      */
+
+    file_stats = calloc(FILE_COUNT + 1, sizeof(*file_stats));
+
+    static const int AllRead = S_IRUSR | S_IRGRP | S_IROTH;
+    static const int AllExec = S_IXUSR | S_IXGRP | S_IXOTH;
+
+    file_stats[ROOT_DIR].st_ino = ROOT_DIR;
+    file_stats[ROOT_DIR].st_mode = S_IFDIR | AllRead | AllExec;
+    file_stats[ROOT_DIR].st_nlink = 1;
+
+    file_stats[ASSIGN_DIR].st_ino = ASSIGN_DIR;
+    file_stats[ASSIGN_DIR].st_mode = S_IFDIR | AllRead | AllExec;
+    file_stats[ASSIGN_DIR].st_nlink = 1;
+
+    file_stats[USERNAME_FILE].st_ino = USERNAME_FILE;
+    file_stats[USERNAME_FILE].st_mode = S_IFREG | AllRead;
+    file_stats[USERNAME_FILE].st_size = sizeof(UsernameContent);
+    file_stats[USERNAME_FILE].st_nlink = 1;
+
+    file_stats[FEATURE_FILE].st_ino = FEATURE_FILE;
+    file_stats[FEATURE_FILE].st_mode = S_IFREG | AllRead;
+    file_stats[FEATURE_FILE].st_size = sizeof(FeatureImplContent);
+    file_stats[FEATURE_FILE].st_nlink = 1;
 }
 
 static void
 assign4_destroy(void *userdata) {
     struct backing_file *backing = userdata;
-    fprintf(stderr, "%s %d\n", __func__, backing->bf_fd);
+    fprintf(stderr, "*** %s %d\n", __func__, backing->bf_fd);
 
-    /*
-     * Finalize any metadata, close any open files, etc.
-     */
+    free(file_stats);
+    file_stats = NULL;
 }
 
 
@@ -74,7 +103,17 @@ assign4_create(fuse_req_t req, fuse_ino_t parent, const char *name,
 static void
 assign4_getattr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fip) {
     fprintf(stderr, "%s ino=%zu\n", __func__, ino);
-    fuse_reply_err(req, ENOSYS);
+
+    // make sure the requested inode does not exceed file count
+    if (ino > FILE_COUNT) {
+        fuse_reply_err(req, ENOENT);
+        return;
+    }
+
+    int result = fuse_reply_attr(req, file_stats + ino, 1);
+    if (result != 0) {
+        fprintf(stderr, "Failed to send attr reply\n");
+    }
 }
 
 /* https://github.com/libfuse/libfuse/blob/fuse_2_9_bugfix/include/fuse_lowlevel.h#L205 */
@@ -82,7 +121,38 @@ static void
 assign4_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
     fprintf(stderr, "%s parent=%zu name='%s'\n", __func__,
             parent, name);
-    fuse_reply_err(req, ENOSYS);
+
+    struct fuse_entry_param dirent;
+
+    if (parent == ROOT_DIR && strcmp(name, "assignment") == 0) {
+        // Looking for 'assignment' in the root directory
+        dirent.ino = ASSIGN_DIR;
+        dirent.attr = file_stats[ASSIGN_DIR];
+    } else if (parent == ASSIGN_DIR && strcmp(name, "username") == 0) {
+        // Looking for 'username' in the 'assignment' directory
+        dirent.ino = USERNAME_FILE;
+        dirent.attr = file_stats[USERNAME_FILE];
+    } else if (parent == ASSIGN_DIR && strcmp(name, "features") == 0) {
+        // Looking for 'list of features' in the 'assignment' directory
+        dirent.ino = FEATURE_FILE;
+        dirent.attr = file_stats[FEATURE_FILE];
+    } else {
+        // NOT FOUND
+        fuse_reply_err(req, ENOENT);
+        return;
+    }
+
+    dirent.generation = 1;
+
+    // Assume that these values are always valid for 1s:
+    dirent.attr_timeout = 1;
+    dirent.entry_timeout = 1;
+
+    int result = fuse_reply_entry(req, &dirent);
+    if (result != 0) {
+        fprintf(stderr, "Failed to send dirent reply\n");
+    }
+
 }
 
 /* https://github.com/libfuse/libfuse/blob/fuse_2_9_bugfix/include/fuse_lowlevel.h#L332 */
@@ -111,11 +181,68 @@ assign4_open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
 
 /* https://github.com/libfuse/libfuse/blob/fuse_2_9_bugfix/include/fuse_lowlevel.h#L622 */
 static void
-assign4_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
-                off_t off, struct fuse_file_info *fi) {
+assign4_readdir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off, struct fuse_file_info *fi) {
     fprintf(stderr, "%s ino=%zu size=%zu off=%zu\n", __func__,
             ino, size, off);
-    fuse_reply_err(req, ENOSYS);
+
+    if (off > 2) {
+        fuse_reply_buf(req, NULL, 0);
+        return;
+    }
+
+    struct stat *self = file_stats + ino;
+    // not a directory
+    if (!S_ISDIR(self->st_mode)) {
+        fuse_reply_err(req, ENOTDIR);
+        return;
+    }
+
+    struct stat *parent = file_stats + ROOT_DIR;
+
+    char buffer[size];
+    off_t bytes = 0;
+    int next = 0;
+
+    if (off < 1) {
+        bytes += fuse_add_direntry(req, buffer + bytes,
+                                   sizeof(buffer) - bytes,
+                                   ".", self, ++next);
+    }
+
+    if (off < 2) {
+        bytes += fuse_add_direntry(req, buffer + bytes,
+                                   sizeof(buffer) - bytes,
+                                   "..", parent, ++next);
+    }
+
+    switch (ino) {
+        case ROOT_DIR:
+            bytes += fuse_add_direntry(req, buffer + bytes,
+                                       sizeof(buffer) - bytes,
+                                       "assignment",
+                                       file_stats + ASSIGN_DIR,
+                                       ++next);
+            break;
+
+        case ASSIGN_DIR:
+            bytes += fuse_add_direntry(req, buffer + bytes,
+                                       sizeof(buffer) - bytes,
+                                       "username",
+                                       file_stats + USERNAME_FILE,
+                                       ++next);
+
+            bytes += fuse_add_direntry(req, buffer + bytes,
+                                       sizeof(buffer) - bytes,
+                                       "features",
+                                       file_stats + FEATURE_FILE,
+                                       ++next);
+            break;
+    }
+
+    int result = fuse_reply_buf(req, buffer, bytes);
+    if (result != 0) {
+        fprintf(stderr, "Failed to send readdir reply\n");
+    }
 }
 
 /* https://github.com/libfuse/libfuse/blob/fuse_2_9_bugfix/include/fuse_lowlevel.h#L472 */
@@ -124,7 +251,56 @@ assign4_read(fuse_req_t req, fuse_ino_t ino, size_t size,
              off_t off, struct fuse_file_info *fi) {
     fprintf(stderr, "%s ino=%zu size=%zu off=%zu\n", __func__,
             ino, size, off);
-    fuse_reply_err(req, ENOSYS);
+
+    const char *response_data = NULL;
+    size_t response_len;
+    int err = 0;
+
+    switch (ino) {
+        case ROOT_DIR:
+        case ASSIGN_DIR:
+            err = EISDIR;
+            break;
+
+        case USERNAME_FILE:
+            if (off >= sizeof(UsernameContent)) {
+                response_len = 0;
+                break;
+            }
+
+            response_data = UsernameContent + off;
+            response_len = sizeof(UsernameContent) - off;
+            if (response_len > size) {
+                response_len = size;
+            }
+            break;
+
+        case FEATURE_FILE:
+            if (off >= sizeof(FeatureImplContent)) {
+                response_len = 0;
+                break;
+            }
+
+            response_data = FeatureImplContent + off;
+            response_len = sizeof(FeatureImplContent) - off;
+            if (response_len > size) {
+                response_len = size;
+            }
+            break;
+
+        default:
+            err = EBADF;
+    }
+    if (err != 0) {
+        fuse_reply_err(req, err);
+        return;
+    }
+
+    assert(response_data != NULL);
+    int result = fuse_reply_buf(req, response_data, response_len);
+    if (result != 0) {
+        fprintf(stderr, "Failed to send read reply\n");
+    }
 }
 
 /* https://github.com/libfuse/libfuse/blob/fuse_2_9_bugfix/include/fuse_lowlevel.h#L367 */
@@ -175,7 +351,7 @@ static struct fuse_lowlevel_ops assign4_ops = {
         .lookup         = assign4_lookup,
         .mkdir          = assign4_mkdir,
         .mknod          = assign4_mknod,
-        .open           = assign4_open,
+//        .open           = assign4_open,
         .read           = assign4_read,
         .readdir        = assign4_readdir,
         .rmdir          = assign4_rmdir,
@@ -186,7 +362,7 @@ static struct fuse_lowlevel_ops assign4_ops = {
 };
 
 
-#if !defined(USE_EXAMPLE) && !defined(USE_SOLUTION)
+#if !defined(USE_EXAMPLEHI) && !defined(USE_SOLUTION)
 
 struct fuse_lowlevel_ops *
 assign4_fuse_ops() {

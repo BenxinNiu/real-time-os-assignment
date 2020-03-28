@@ -47,7 +47,7 @@ static void
 example_init(void *userdata, struct fuse_conn_info *conn) {
     struct backing_file *backing = userdata;
     fprintf(stderr, "*** %s '%s'\n", __func__, backing->bf_path);
-
+    printf("\n\nTHIS IS EXAMPLES benxin\n\n");
     /*
      * This trivial example doesn't actually use the data stored in
      * the structure pointed at by `userdata`.
@@ -252,7 +252,7 @@ static struct fuse_lowlevel_ops example_ops = {
 };
 
 
-#if defined(USE_EXAMPLE)
+#if defined(USE_EXAMPLEHI)
 struct fuse_lowlevel_ops*
 assign4_fuse_ops()
 {

@@ -45,7 +45,10 @@ struct metadata *metadata_stats;
 
 static const char UsernameContent[] = "bn2645_practicing_social_distancing\n";
 
-static const char FeatureImplContent[] = "- directory listing\n";
+static const char FeatureImplContent[] = "- directory listing\n"
+                                         "- Directory creation and removal\n"
+                                         "- Permission manipulation\n"
+                                         "- Permission checking";
 
 static const int AllRead = S_IRUSR | S_IRGRP | S_IROTH;
 static const int AllExec = S_IXUSR | S_IXGRP | S_IXOTH;
@@ -84,7 +87,7 @@ assign4_init(void *userdata, struct fuse_conn_info *conn) {
     metadata_stats[ROOT_DIR].children[0] = ASSIGN_DIR;
 
     file_stats[ASSIGN_DIR].st_ino = ASSIGN_DIR;
-    file_stats[ASSIGN_DIR].st_mode = S_IFDIR | All | AllExec;
+    file_stats[ASSIGN_DIR].st_mode = S_IFDIR | AllRead | AllExec;
     file_stats[ASSIGN_DIR].st_nlink = 1;
 
     metadata_stats[ASSIGN_DIR].ino = ASSIGN_DIR;
@@ -182,7 +185,7 @@ assign4_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
     }
     for (int i = 0; i < parent_metadata->child_count; i++) {
         struct metadata *child = get_metadata(parent_metadata->children[i]);
-        if (child != NULL && strcmp(name, child->name) == 0) {
+        if (child != NULL && !child->in_trash && strcmp(name, child->name) == 0) {
             dirent.ino = child->ino;
             dirent.attr = file_stats[child->ino];
             dirent.generation = 1;
@@ -405,7 +408,21 @@ static void
 assign4_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
                 int to_set, struct fuse_file_info *fi) {
     fprintf(stderr, "%s ino=%zu to_set=%d\n", __func__, ino, to_set);
-    fuse_reply_err(req, ENOSYS);
+    // make sure the requested inode does not exceed file count
+    if (ino > INITIAL_FILE_COUNT) {
+        fuse_reply_err(req, ENOENT);
+        return;
+    }
+
+    file_stats[ino].st_mode = attr->st_mode;
+
+    printf("\n\n\n%hu\n\n\n", attr->st_mode);
+
+    int result = fuse_reply_attr(req, file_stats + ino, 1);
+    if (result != 0) {
+        fprintf(stderr, "Failed to send attr reply\n");
+    }
+//    fuse_reply_err(req, ENOSYS);
 }
 
 /* https://github.com/libfuse/libfuse/blob/fuse_2_9_bugfix/include/fuse_lowlevel.h#L674 */

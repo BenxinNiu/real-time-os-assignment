@@ -26,12 +26,35 @@
 #define    ASSIGN_DIR    2
 #define    USERNAME_FILE    3
 #define    FEATURE_FILE    4
-#define    FILE_COUNT    4
+#define    FILE_COUNT    10
+
+struct metadata {
+    fuse_ino_t ino;
+    char *name;
+    fuse_ino_t children[FILE_COUNT];
+    int child_count;
+};
+
+int current_ava_ino;
 struct stat *file_stats;
+struct metadata *metadata_stats;
 
 static const char UsernameContent[] = "bn2645_practicing_social_distancing\n";
 
 static const char FeatureImplContent[] = "- directory listing\n";
+
+static const int AllRead = S_IRUSR | S_IRUSR | S_IRGRP | S_IROTH;
+static const int AllExec = S_IXUSR | S_IXGRP | S_IXOTH;
+static const int All = S_IRWXU | S_IRWXG | S_IRWXO;
+
+static struct metadata *get_metadata(fuse_ino_t ino) {
+    for (int i = 1; i <= FILE_COUNT; i++) {
+        if (metadata_stats[i].ino == ino) {
+            return &(metadata_stats[i]);
+        }
+    }
+    return NULL;
+}
 
 static void
 assign4_init(void *userdata, struct fuse_conn_info *conn) {
@@ -44,27 +67,47 @@ assign4_init(void *userdata, struct fuse_conn_info *conn) {
      */
 
     file_stats = calloc(FILE_COUNT + 1, sizeof(*file_stats));
-
-    static const int AllRead = S_IRUSR | S_IRGRP | S_IROTH;
-    static const int AllExec = S_IXUSR | S_IXGRP | S_IXOTH;
+    metadata_stats = calloc(FILE_COUNT + 1, sizeof(*metadata_stats));
 
     file_stats[ROOT_DIR].st_ino = ROOT_DIR;
-    file_stats[ROOT_DIR].st_mode = S_IFDIR | AllRead | AllExec;
+    file_stats[ROOT_DIR].st_mode = S_IFDIR | All | AllExec;
     file_stats[ROOT_DIR].st_nlink = 1;
 
+    metadata_stats[ROOT_DIR].ino = ROOT_DIR;
+    metadata_stats[ROOT_DIR].name = "";
+    metadata_stats[ROOT_DIR].child_count = 1;
+    metadata_stats[ROOT_DIR].children[0] = ASSIGN_DIR;
+
     file_stats[ASSIGN_DIR].st_ino = ASSIGN_DIR;
-    file_stats[ASSIGN_DIR].st_mode = S_IFDIR | AllRead | AllExec;
+    file_stats[ASSIGN_DIR].st_mode = S_IFDIR | All | AllExec;
     file_stats[ASSIGN_DIR].st_nlink = 1;
+
+    metadata_stats[ASSIGN_DIR].ino = ASSIGN_DIR;
+    metadata_stats[ASSIGN_DIR].name = "assignment";
+    metadata_stats[ASSIGN_DIR].child_count = 0;
+    metadata_stats[ASSIGN_DIR].child_count = 2;
+    metadata_stats[ASSIGN_DIR].children[0] = USERNAME_FILE;
+    metadata_stats[ASSIGN_DIR].children[1] = FEATURE_FILE;
 
     file_stats[USERNAME_FILE].st_ino = USERNAME_FILE;
     file_stats[USERNAME_FILE].st_mode = S_IFREG | AllRead;
     file_stats[USERNAME_FILE].st_size = sizeof(UsernameContent);
     file_stats[USERNAME_FILE].st_nlink = 1;
 
+    metadata_stats[USERNAME_FILE].ino = USERNAME_FILE;
+    metadata_stats[USERNAME_FILE].name = "username";
+    metadata_stats[USERNAME_FILE].child_count = 0;
+
     file_stats[FEATURE_FILE].st_ino = FEATURE_FILE;
     file_stats[FEATURE_FILE].st_mode = S_IFREG | AllRead;
     file_stats[FEATURE_FILE].st_size = sizeof(FeatureImplContent);
     file_stats[FEATURE_FILE].st_nlink = 1;
+
+    metadata_stats[FEATURE_FILE].ino = FEATURE_FILE;
+    metadata_stats[FEATURE_FILE].name = "features";
+    metadata_stats[FEATURE_FILE].child_count = 0;
+
+    current_ava_ino = FEATURE_FILE + 1;
 }
 
 static void
@@ -124,35 +167,29 @@ assign4_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
 
     struct fuse_entry_param dirent;
 
-    if (parent == ROOT_DIR && strcmp(name, "assignment") == 0) {
-        // Looking for 'assignment' in the root directory
-        dirent.ino = ASSIGN_DIR;
-        dirent.attr = file_stats[ASSIGN_DIR];
-    } else if (parent == ASSIGN_DIR && strcmp(name, "username") == 0) {
-        // Looking for 'username' in the 'assignment' directory
-        dirent.ino = USERNAME_FILE;
-        dirent.attr = file_stats[USERNAME_FILE];
-    } else if (parent == ASSIGN_DIR && strcmp(name, "features") == 0) {
-        // Looking for 'list of features' in the 'assignment' directory
-        dirent.ino = FEATURE_FILE;
-        dirent.attr = file_stats[FEATURE_FILE];
-    } else {
-        // NOT FOUND
+    struct metadata *parent_metadata = get_metadata(parent);
+    if (parent_metadata == NULL) {
         fuse_reply_err(req, ENOENT);
         return;
     }
+    for (int i = 0; i < parent_metadata->child_count; i++) {
+        struct metadata *child = get_metadata(parent_metadata->children[i]);
+        if (child != NULL && strcmp(name, child->name) == 0) {
+            dirent.ino = child->ino;
+            dirent.attr = file_stats[child->ino];
+            dirent.generation = 1;
+            // Assume that these values are always valid for 1s:
+            dirent.attr_timeout = 1;
+            dirent.entry_timeout = 1;
 
-    dirent.generation = 1;
-
-    // Assume that these values are always valid for 1s:
-    dirent.attr_timeout = 1;
-    dirent.entry_timeout = 1;
-
-    int result = fuse_reply_entry(req, &dirent);
-    if (result != 0) {
-        fprintf(stderr, "Failed to send dirent reply\n");
+            int result = fuse_reply_entry(req, &dirent);
+            if (result != 0) {
+                fprintf(stderr, "Failed to send dirent reply\n");
+            }
+            return;
+        }
     }
-
+    fuse_reply_err(req, ENOENT);
 }
 
 /* https://github.com/libfuse/libfuse/blob/fuse_2_9_bugfix/include/fuse_lowlevel.h#L332 */
@@ -160,7 +197,27 @@ static void
 assign4_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode) {
     fprintf(stderr, "%s parent=%zu name='%s' mode=%d\n", __func__,
             parent, name, mode);
-    fuse_reply_err(req, ENOSYS);
+    if (current_ava_ino > FILE_COUNT) {
+        fuse_reply_err(req, ENOENT);
+    }
+
+    struct fuse_entry_param dirent;
+
+    file_stats[current_ava_ino].st_ino = current_ava_ino;
+//    file_stats[current_ava_ino].st_mode = S_IFDIR | AllRead | AllExec;
+    file_stats[current_ava_ino].st_mode = mode;
+    file_stats[current_ava_ino].st_nlink = 1;
+
+    dirent.ino = current_ava_ino;
+    dirent.attr = file_stats[current_ava_ino];
+
+    current_ava_ino++;
+
+    int result = fuse_reply_entry(req, &dirent);
+    if (result != 0) {
+        fprintf(stderr, "Failed to send dirent reply\n");
+    }
+//    fuse_reply_err(req, ENOSYS);
 }
 
 /* https://github.com/libfuse/libfuse/blob/fuse_2_9_bugfix/include/fuse_lowlevel.h#L317 */
@@ -215,28 +272,22 @@ assign4_readdir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off, struct f
                                    "..", parent, ++next);
     }
 
-    switch (ino) {
-        case ROOT_DIR:
-            bytes += fuse_add_direntry(req, buffer + bytes,
-                                       sizeof(buffer) - bytes,
-                                       "assignment",
-                                       file_stats + ASSIGN_DIR,
-                                       ++next);
-            break;
+    struct metadata* target_metadata = get_metadata(ino);
 
-        case ASSIGN_DIR:
+    // metadata not found for this inode
+    if (target_metadata == NULL) {
+        fuse_reply_err(req, ENOENT);
+        return;
+    }
+    for(int i=0; i < target_metadata->child_count; i++){
+        struct metadata* child = get_metadata(target_metadata->children[i]);
+        if(child != NULL){
             bytes += fuse_add_direntry(req, buffer + bytes,
                                        sizeof(buffer) - bytes,
-                                       "username",
-                                       file_stats + USERNAME_FILE,
+                                       child->name,
+                                       file_stats + child->ino,
                                        ++next);
-
-            bytes += fuse_add_direntry(req, buffer + bytes,
-                                       sizeof(buffer) - bytes,
-                                       "features",
-                                       file_stats + FEATURE_FILE,
-                                       ++next);
-            break;
+        }
     }
 
     int result = fuse_reply_buf(req, buffer, bytes);

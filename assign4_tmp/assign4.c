@@ -21,18 +21,22 @@
 #include "assign4.h"
 
 
-// Some hard-coded inode numbers:
+// Some hard-coded inode numbers for initial backed files:
 #define    ROOT_DIR    1
 #define    ASSIGN_DIR    2
 #define    USERNAME_FILE    3
 #define    FEATURE_FILE    4
-#define    FILE_COUNT    10
+#define    INITIAL_FILE_COUNT    100
+#define MAX_FILE_NAME_LENGTH 100
 
 struct metadata {
     fuse_ino_t ino;
-    char *name;
-    fuse_ino_t children[FILE_COUNT];
+    char name[MAX_FILE_NAME_LENGTH];
+    fuse_ino_t children[INITIAL_FILE_COUNT];
     int child_count;
+    // flag for keeping record in trash bin
+    bool in_trash;
+    bool recovered;
 };
 
 int current_ava_ino;
@@ -43,12 +47,12 @@ static const char UsernameContent[] = "bn2645_practicing_social_distancing\n";
 
 static const char FeatureImplContent[] = "- directory listing\n";
 
-static const int AllRead = S_IRUSR | S_IRUSR | S_IRGRP | S_IROTH;
+static const int AllRead = S_IRUSR | S_IRGRP | S_IROTH;
 static const int AllExec = S_IXUSR | S_IXGRP | S_IXOTH;
 static const int All = S_IRWXU | S_IRWXG | S_IRWXO;
 
 static struct metadata *get_metadata(fuse_ino_t ino) {
-    for (int i = 1; i <= FILE_COUNT; i++) {
+    for (int i = 1; i <= INITIAL_FILE_COUNT; i++) {
         if (metadata_stats[i].ino == ino) {
             return &(metadata_stats[i]);
         }
@@ -60,21 +64,22 @@ static void
 assign4_init(void *userdata, struct fuse_conn_info *conn) {
     struct backing_file *backing = userdata;
     fprintf(stderr, "%s '%s'\n", __func__, backing->bf_path);
-    printf("\n\nhihihihihihihihi benxin\n\n");
+    printf("\n\nsocial distancing drives people to learn file system "
+           "and keeps everyone safe\n\n");
     /*
      * This function should do some setup (e.g., open the backing file or
      * mmap(2) some memory) and prepare any metadata that you need.
      */
 
-    file_stats = calloc(FILE_COUNT + 1, sizeof(*file_stats));
-    metadata_stats = calloc(FILE_COUNT + 1, sizeof(*metadata_stats));
+    file_stats = calloc(INITIAL_FILE_COUNT + 1, sizeof(*file_stats));
+    metadata_stats = calloc(INITIAL_FILE_COUNT + 1, sizeof(*metadata_stats));
 
     file_stats[ROOT_DIR].st_ino = ROOT_DIR;
     file_stats[ROOT_DIR].st_mode = S_IFDIR | All | AllExec;
     file_stats[ROOT_DIR].st_nlink = 1;
 
     metadata_stats[ROOT_DIR].ino = ROOT_DIR;
-    metadata_stats[ROOT_DIR].name = "";
+    strcpy(metadata_stats[ROOT_DIR].name, "");
     metadata_stats[ROOT_DIR].child_count = 1;
     metadata_stats[ROOT_DIR].children[0] = ASSIGN_DIR;
 
@@ -83,7 +88,7 @@ assign4_init(void *userdata, struct fuse_conn_info *conn) {
     file_stats[ASSIGN_DIR].st_nlink = 1;
 
     metadata_stats[ASSIGN_DIR].ino = ASSIGN_DIR;
-    metadata_stats[ASSIGN_DIR].name = "assignment";
+    strcpy(metadata_stats[ASSIGN_DIR].name, "assignment");
     metadata_stats[ASSIGN_DIR].child_count = 0;
     metadata_stats[ASSIGN_DIR].child_count = 2;
     metadata_stats[ASSIGN_DIR].children[0] = USERNAME_FILE;
@@ -95,7 +100,7 @@ assign4_init(void *userdata, struct fuse_conn_info *conn) {
     file_stats[USERNAME_FILE].st_nlink = 1;
 
     metadata_stats[USERNAME_FILE].ino = USERNAME_FILE;
-    metadata_stats[USERNAME_FILE].name = "username";
+    strcpy(metadata_stats[USERNAME_FILE].name, "username");
     metadata_stats[USERNAME_FILE].child_count = 0;
 
     file_stats[FEATURE_FILE].st_ino = FEATURE_FILE;
@@ -104,7 +109,8 @@ assign4_init(void *userdata, struct fuse_conn_info *conn) {
     file_stats[FEATURE_FILE].st_nlink = 1;
 
     metadata_stats[FEATURE_FILE].ino = FEATURE_FILE;
-    metadata_stats[FEATURE_FILE].name = "features";
+//    metadata_stats[FEATURE_FILE].name = "features";
+    strcpy(metadata_stats[FEATURE_FILE].name, "features");
     metadata_stats[FEATURE_FILE].child_count = 0;
 
     current_ava_ino = FEATURE_FILE + 1;
@@ -116,7 +122,9 @@ assign4_destroy(void *userdata) {
     fprintf(stderr, "*** %s %d\n", __func__, backing->bf_fd);
 
     free(file_stats);
+    free(metadata_stats);
     file_stats = NULL;
+    metadata_stats= NULL;
 }
 
 
@@ -148,7 +156,7 @@ assign4_getattr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fip) {
     fprintf(stderr, "%s ino=%zu\n", __func__, ino);
 
     // make sure the requested inode does not exceed file count
-    if (ino > FILE_COUNT) {
+    if (ino > INITIAL_FILE_COUNT) {
         fuse_reply_err(req, ENOENT);
         return;
     }
@@ -192,21 +200,59 @@ assign4_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
     fuse_reply_err(req, ENOENT);
 }
 
+/* https://github.com/libfuse/libfuse/blob/fuse_2_9_bugfix/include/fuse_lowlevel.h#L367 */
+static void
+assign4_rmdir(fuse_req_t req, fuse_ino_t parent, const char *name) {
+    fprintf(stderr, "%s parent=%zu name='%s'\n", __func__, parent, name);
+    struct metadata* parent_metadata = get_metadata(parent);
+
+    for (int i=0; i < parent_metadata->child_count; i++) {
+        struct metadata* child = get_metadata(parent_metadata->children[i]);
+
+        if(child != NULL && !child->in_trash && strcmp(name, child->name) == 0){
+            child->in_trash = true;
+            child->recovered = false;
+            fuse_reply_err(req, 0);
+            return;
+        }
+    }
+    // file not found
+    fuse_reply_err(req, ENOENT);
+}
+
 /* https://github.com/libfuse/libfuse/blob/fuse_2_9_bugfix/include/fuse_lowlevel.h#L332 */
 static void
 assign4_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode) {
     fprintf(stderr, "%s parent=%zu name='%s' mode=%d\n", __func__,
             parent, name, mode);
-    if (current_ava_ino > FILE_COUNT) {
+    if (current_ava_ino > INITIAL_FILE_COUNT) {
         fuse_reply_err(req, ENOENT);
     }
 
     struct fuse_entry_param dirent;
 
+    struct metadata *parent_metadata = get_metadata(parent);
+    if(parent_metadata == NULL){
+        fuse_reply_err(req, ENOENT);
+        return;
+    }
+    // create new directory
     file_stats[current_ava_ino].st_ino = current_ava_ino;
 //    file_stats[current_ava_ino].st_mode = S_IFDIR | AllRead | AllExec;
     file_stats[current_ava_ino].st_mode = mode;
     file_stats[current_ava_ino].st_nlink = 1;
+
+    // set metadata of new directory
+//    strcpy(metadata_stats[current_ava_ino].name, name);
+//    metadata_stats[current_ava_ino].name = name;
+    strcpy(metadata_stats[current_ava_ino].name, name);
+    metadata_stats[current_ava_ino].child_count=0;
+    metadata_stats[current_ava_ino].ino = current_ava_ino;
+    metadata_stats[current_ava_ino].in_trash = false;
+
+    // update metadata of parent
+    parent_metadata->children[parent_metadata->child_count] = current_ava_ino;
+    parent_metadata->child_count++;
 
     dirent.ino = current_ava_ino;
     dirent.attr = file_stats[current_ava_ino];
@@ -217,7 +263,6 @@ assign4_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode) 
     if (result != 0) {
         fprintf(stderr, "Failed to send dirent reply\n");
     }
-//    fuse_reply_err(req, ENOSYS);
 }
 
 /* https://github.com/libfuse/libfuse/blob/fuse_2_9_bugfix/include/fuse_lowlevel.h#L317 */
@@ -281,7 +326,8 @@ assign4_readdir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off, struct f
     }
     for(int i=0; i < target_metadata->child_count; i++){
         struct metadata* child = get_metadata(target_metadata->children[i]);
-        if(child != NULL){
+        printf("\n\ninode:%d name: %s\n\n", child->ino, child->name);
+        if(child != NULL && !child->in_trash){
             bytes += fuse_add_direntry(req, buffer + bytes,
                                        sizeof(buffer) - bytes,
                                        child->name,
@@ -354,13 +400,6 @@ assign4_read(fuse_req_t req, fuse_ino_t ino, size_t size,
     }
 }
 
-/* https://github.com/libfuse/libfuse/blob/fuse_2_9_bugfix/include/fuse_lowlevel.h#L367 */
-static void
-assign4_rmdir(fuse_req_t req, fuse_ino_t parent, const char *name) {
-    fprintf(stderr, "%s parent=%zu name='%s'\n", __func__, parent, name);
-    fuse_reply_err(req, ENOSYS);
-}
-
 /* https://github.com/libfuse/libfuse/blob/fuse_2_9_bugfix/include/fuse_lowlevel.h#L286 */
 static void
 assign4_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
@@ -373,7 +412,26 @@ assign4_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
 static void
 assign4_statfs(fuse_req_t req, fuse_ino_t ino) {
     fprintf(stderr, "%s ino=%zu\n", __func__, ino);
-    fuse_reply_err(req, ENOSYS);
+
+    /*
+     * unsigned long	f_bsize;	/* File system block size */
+//    unsigned long	f_frsize;	/* Fundamental file system block size */
+//    fsblkcnt_t	f_blocks;	/* Blocks on FS in units of f_frsize */
+//    fsblkcnt_t	f_bfree;	/* Free blocks */
+//    fsblkcnt_t	f_bavail;	/* Blocks available to non-root */
+//    fsfilcnt_t	f_files;	/* Total inodes */
+//    fsfilcnt_t	f_ffree;	/* Free inodes */
+//    fsfilcnt_t	f_favail;	/* Free inodes for non-root */
+//    unsigned long	f_fsid;		/* Filesystem ID */
+//    unsigned long	f_flag;		/* Bit mask of values */
+//    unsigned long	f_namemax;	/* Max file name length */
+
+    struct statvfs stbuf;
+    stbuf.f_files = INITIAL_FILE_COUNT;
+    stbuf.f_ffree = INITIAL_FILE_COUNT - current_ava_ino;
+
+    fuse_reply_statfs(req, &stbuf);
+//    fuse_reply_err(req, ENOSYS);
 }
 
 /* https://github.com/libfuse/libfuse/blob/fuse_2_9_bugfix/include/fuse_lowlevel.h#L350 */
